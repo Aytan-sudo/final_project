@@ -21,7 +21,7 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Configure CS50 Library to use SQLite database
-db = SQL("sqlite:///finance.db")
+db = SQL("sqlite:///data.db")
 
 @login_required
 def username():
@@ -40,17 +40,9 @@ def after_request(response):
 @app.route("/")
 @login_required
 def index():
-    """Show portfolio of stocks"""
-    data = db.execute("SELECT * FROM stocks WHERE username = ?", username())
-    values = 0
-    for i in data:
-        i['name'] = lookup(i['symbol'])['name']
-        i['price'] = lookup(i['symbol'])['price']
-        values += (i['price'] * i['shares'])
+    """To define"""
 
-    cash = db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])[0]['cash']
-
-    return render_template("index.html", data=data, cash=cash, values=values)
+    return render_template("index.html")
 
 @app.route("/account", methods=["GET", "POST"])
 @login_required
@@ -85,77 +77,11 @@ def account():
         # Fianlly update the password
         db.execute("UPDATE users SET hash = ? WHERE username = ?", generate_password_hash(new_password),username())
 
-
-    #TODO Change cash ?
     
 
     # User reached route via GET (as by clicking a link or via redirect or backward)
     else:
         return render_template("account.html")
-
-@app.route("/buy", methods=["GET", "POST"])
-@login_required
-def buy():
-    """Buy shares of stock"""
-        # User reached route via POST (as by submitting a form via POST)
-    if request.method == "POST":
-
-        #request data from buy.html
-        symbol_to_buy = request.form.get("symbol")
-        shares_to_buy = request.form.get("shares")
-
-        #Ensure "symbol" exist and integrity of shares
-        if lookup(symbol_to_buy) == None:
-            return apology("Invalid Symbol", 400)
-
-        if not shares_to_buy.isdigit():
-            return apology("not a number", 400)
-
-        #define variables of the buy
-        symbol = lookup(symbol_to_buy)['symbol']
-        shares = int(shares_to_buy)
-        price = shares * lookup(symbol_to_buy)['price']
-
-        #Check if enough money to buy
-
-        test_cash = db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])
-        if test_cash:
-            cash_available = test_cash[0]['cash']
-        else:
-            return apology("no user", 400)
-        print(symbol, shares, price, cash_available)
-
-        if cash_available < price:
-            return apology("Not enough cash",400)
-
-        # add in the transaction table
-        db.execute("INSERT INTO transactions (username,type_transaction,date,symbol,shares,price) VALUES (?,?,?,?,?,?)",
-        username(), "Buy", datetime.now(), symbol, shares, price)
-
-        # update the cash of the user
-        db.execute("UPDATE users SET cash = ? WHERE id = ?", cash_available - price, session["user_id"])
-
-        # update the stock of the user
-        db.execute("INSERT INTO stocks (username, symbol, shares) VALUES (?, ?, ?) ON CONFLICT (username, symbol) DO UPDATE SET shares = shares + ?",
-        username(), symbol, shares, shares)
-
-        # return
-        flash(f"Buyed {shares} {symbol} for {usd(price)} !")
-        return redirect("/")
-
-    # User reached route via GET (as by clicking a link or via redirect or backward)
-    else:
-        return render_template("buy.html")
-
-
-
-@app.route("/history")
-@login_required
-def history():
-    """Show history of transactions"""
-
-    history = db.execute("SELECT * FROM transactions WHERE username = ?", username())
-    return render_template("history.html", history=history)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -205,26 +131,6 @@ def logout():
     return redirect("/")
 
 
-@app.route("/quote", methods=["GET", "POST"])
-@login_required
-def quote():
-    """Get stock quote."""
-    # User reached route via POST (as by submitting a form via POST)
-    if request.method == "POST":
-
-        quote_to_lookup = request.form.get("symbol")
-
-        if lookup(quote_to_lookup) == None:
-            return apology("Don't exist", 400)
-
-        result = (f"A share of {lookup(quote_to_lookup)['name']} ({lookup(quote_to_lookup)['symbol']}) cost {usd(lookup(quote_to_lookup)['price'])}")
-
-        return render_template("quoted.html", result=result)
-
-    # User reached route via GET (as by clicking a link or via redirect or backward)
-    else:
-        return render_template("quote.html")
-
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -265,48 +171,4 @@ def register():
     else:
         return render_template("register.html")
 
-@app.route("/sell", methods=["GET", "POST"])
-@login_required
-def sell():
-    """Sell shares of stock"""
 
-    if request.method == "POST":
-
-        #request data from sell.html
-        symbol_to_sell = request.form.get("symbol")
-        shares_to_sell = request.form.get("shares")
-
-        #define shares available to sell
-        shares_available = db.execute("SELECT shares FROM stocks WHERE username = ? AND symbol = ?", username(), symbol_to_sell)[0]['shares']
-
-        if shares_available < int(shares_to_sell):
-            return apology('Not enough stock !', 400)
-
-        #defines variables
-        symbol = lookup(symbol_to_sell)['symbol']
-        shares = int(shares_to_sell)
-        price = shares * lookup(symbol_to_sell)['price']
-        cash_available = db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])[0]['cash']
-
-        # add in the transaction table
-        db.execute("INSERT INTO transactions (username,type_transaction,date,symbol,shares,price) VALUES (?,?,?,?,?,?)",
-        username(), "Sell", datetime.now(), symbol, shares, price)
-
-        # update the cash of the user
-        db.execute("UPDATE users SET cash = ? WHERE id = ?", cash_available + price, session["user_id"])
-
-        # update the stock of the user
-        db.execute("INSERT INTO stocks (username, symbol, shares) VALUES (?, ?, ?) ON CONFLICT (username, symbol) DO UPDATE SET shares = shares - ?",
-        username(), symbol, shares, shares)
-
-        # return
-        flash(f"Sold {shares} {symbol} for {usd(price)} !")
-        return redirect("/")
-
-
-        # User reached route via GET (as by clicking a link or via redirect or backward)
-    else:
-        #Check symbol available and list them as options
-        symbol_available = db.execute("SELECT symbol FROM stocks WHERE username = ?",username())
-
-        return render_template("sell.html", symbol_available=symbol_available)
