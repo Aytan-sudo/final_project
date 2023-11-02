@@ -1,8 +1,11 @@
 import os
+import core_maze
+import io
+import base64
 
 from cs50 import SQL
 from datetime import datetime
-from flask import Flask, flash, redirect, render_template, request, session
+from flask import Flask, flash, redirect, render_template, request, session, send_file
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -170,5 +173,30 @@ def register():
     # User reached route via GET (as by clicking a link or via redirect or backward)
     else:
         return render_template("register.html")
+
+
+def encode_maze():
+    """Maze Generator"""
+
+    maze = core_maze.Grid().create_png()
+        
+    img_io = io.BytesIO()
+    maze.save(img_io, 'PNG')
+    img_io.seek(0)
+
+    img_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
+
+    return img_base64   
+
+@app.route("/maze", methods=["GET", "POST"])
+def maze():
+    #if request.method == "POST":
+    img_base64 = encode_maze()
+    return render_template('maze.html', img_data=img_base64)
+
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    #else:
+        #return render_template("login.html")
 
 
