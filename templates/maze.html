@@ -1,27 +1,50 @@
 <script>
-    // Déplacez la fonction ici pour la rendre globale
-    function sliderChanged(value) {
-        console.log("Slider changed to:", value);
-        var formData = new FormData();
-        formData.append('sliderValue', value);
+document.addEventListener('DOMContentLoaded', function() {
+    // Gérer les sliders
+    document.getElementById('col').onchange = function() {
+        sliderOrRadioChanged();
+    };
     
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/maze', true);
-        xhr.onreadystatechange = function() {
-            if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-                var newMazeImageBase64 = this.responseText;
-                document.getElementById('mazeImage').src = 'data:image/png;base64,' + newMazeImageBase64;
-            }
-        };
-        xhr.send(formData);
-    }
+    document.getElementById('lines').onchange = function() {
+        sliderOrRadioChanged();
+    };
 
-    // Attachez l'événement `oninput` après que le DOM ait été chargé
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('slider').onchange = function() {
-            sliderChanged(this.value);
+    // Gérer les boutons radio
+    document.querySelectorAll('input[type=radio][name=algo]').forEach(function(radio) {
+        radio.onchange = function() {
+            sliderOrRadioChanged();
         };
     });
+});
+
+function sliderOrRadioChanged() {
+    var colValue = document.getElementById('col').value;
+    var linesValue = document.getElementById('lines').value;
+
+    var selectedAlgo;
+    document.querySelectorAll('input[type=radio][name=algo]').forEach(function(radio) {
+        if (radio.checked) {
+            selectedAlgo = radio.value;
+        }
+    });
+
+    console.log("Cols:", colValue, "Lines:", linesValue, "Selected Algo:", selectedAlgo);
+    
+    var formData = new FormData();
+    formData.append('colValue', colValue);
+    formData.append('linesValue', linesValue);
+    formData.append('algo', selectedAlgo);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/maze', true);
+    xhr.onreadystatechange = function() {
+        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+            var newMazeImageBase64 = this.responseText;
+            document.getElementById('mazeImage').src = 'data:image/png;base64,' + newMazeImageBase64;
+        }
+    };
+    xhr.send(formData);
+}
 </script>
 
 {% extends "layout.html" %}
@@ -33,7 +56,22 @@
 {% block main %}
 
 
-<input type="range" id="slider" name="sliderValue" min="10" max="30" value="20">
+
+<label for="col">Columns:</label>
+<input type="range" id="col" name="colValue" min="10" max="30" value="20">
+
+<label for="lines">Lines:</label>
+<input type="range" id="lines" name="linesValue" min="10" max="30" value="20">
+
+<fieldset>
+    <legend>Choose an algorithm:</legend>
+    <input type="radio" id="algo1" name="algo" value="ab" checked>
+    <label for="algo1">Algorithm 1</label><br>
+    <input type="radio" id="algo2" name="algo" value="hk">
+    <label for="algo2">Algorithm 2</label><br>
+    <input type="radio" id="algo3" name="algo" value="bt">
+    <label for="algo3">Algorithm 3</label>
+</fieldset>
 
 <h1>Voici mon Image PNG Dynamique</h1>
 <img id="mazeImage" src="data:image/png;base64,{{ img_data }}" alt="Mon Image Dynamique">

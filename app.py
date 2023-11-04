@@ -74,7 +74,7 @@ def account():
         password_hash_in_db = db.execute("SELECT hash FROM users WHERE username IS ?", username())
 
         # Ensure actual password is correct
-        if actual_password != check_password_hash(password_hash_in_db[0]['hash']):
+        if not check_password_hash(password_hash_in_db[0]['hash'], actual_password):
             return apology("wrong actual password", 400)
 
         # Fianlly update the password
@@ -175,12 +175,10 @@ def register():
         return render_template("register.html")
 
 
-def encode_maze(slider_value):
-    """Maze Generator"""
+def encode_maze(col_value, lines_value, algo):
+    """Maze encoding, function call by maze() in @app.route (/maze)"""
 
-    print(slider_value)
-
-    maze = core_maze.Grid(col = int(slider_value)).create_png()
+    maze = core_maze.Grid(col = int(col_value), lines = int(lines_value), algo= algo).create_png()
         
     img_io = io.BytesIO()
     maze.save(img_io, 'PNG')
@@ -188,21 +186,26 @@ def encode_maze(slider_value):
 
     img_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
 
-    return img_base64  
+    return img_base64  #encoding in text (base 64)
 
 
 @app.route("/maze", methods=["GET", "POST"])
 def maze():
-    # Valeur par défaut pour le premier chargement de la page
+    # default values for the first loading (i.e. GET)
     default_slider_value = 20
+    default_algo = "ab"
     
+    # For a POST request (i.e. by sliders or radio buttons)
     if request.method == "POST":
-        slider_value = request.form.get('sliderValue', default_slider_value)
-        img_base64 = encode_maze(slider_value)
-        return img_base64  # Réponse AJAX pour une requête POST
+        col_value = request.form.get('colValue')
+        lines_value = request.form.get('linesValue')
+        algo = request.form.get('algo')
 
-    # Pour une requête GET, affichez la page avec la valeur par défaut
-    img_base64 = encode_maze(default_slider_value)
+        img_base64 = encode_maze(col_value, lines_value, algo)
+        return img_base64  #AJAX answer for a POST request
+
+    # For a GET request, display the page with the default value
+    img_base64 = encode_maze(col_value=default_slider_value, lines_value=default_slider_value, algo=default_algo)
     return render_template('maze.html', img_data=img_base64)
 
 
