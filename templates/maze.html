@@ -1,3 +1,29 @@
+<script>
+    // Déplacez la fonction ici pour la rendre globale
+    function sliderChanged(value) {
+        console.log("Slider changed to:", value);
+        var formData = new FormData();
+        formData.append('sliderValue', value);
+    
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/maze', true);
+        xhr.onreadystatechange = function() {
+            if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                var newMazeImageBase64 = this.responseText;
+                document.getElementById('mazeImage').src = 'data:image/png;base64,' + newMazeImageBase64;
+            }
+        };
+        xhr.send(formData);
+    }
+
+    // Attachez l'événement `oninput` après que le DOM ait été chargé
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('slider').onchange = function() {
+            sliderChanged(this.value);
+        };
+    });
+</script>
+
 {% extends "layout.html" %}
 
 {% block title %}
@@ -6,7 +32,11 @@
 
 {% block main %}
 
+
+<input type="range" id="slider" name="sliderValue" min="10" max="30" value="20">
+
 <h1>Voici mon Image PNG Dynamique</h1>
-<img src="data:image/png;base64,{{ img_data }}" alt="Mon Image Dynamique">
+<img id="mazeImage" src="data:image/png;base64,{{ img_data }}" alt="Mon Image Dynamique">
 
 {% endblock %}
+

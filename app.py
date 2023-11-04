@@ -175,10 +175,12 @@ def register():
         return render_template("register.html")
 
 
-def encode_maze():
+def encode_maze(slider_value):
     """Maze Generator"""
 
-    maze = core_maze.Grid().create_png()
+    print(slider_value)
+
+    maze = core_maze.Grid(col = int(slider_value)).create_png()
         
     img_io = io.BytesIO()
     maze.save(img_io, 'PNG')
@@ -186,17 +188,21 @@ def encode_maze():
 
     img_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
 
-    return img_base64   
+    return img_base64  
+
 
 @app.route("/maze", methods=["GET", "POST"])
 def maze():
-    #if request.method == "POST":
-    img_base64 = encode_maze()
+    # Valeur par défaut pour le premier chargement de la page
+    default_slider_value = 20
+    
+    if request.method == "POST":
+        slider_value = request.form.get('sliderValue', default_slider_value)
+        img_base64 = encode_maze(slider_value)
+        return img_base64  # Réponse AJAX pour une requête POST
+
+    # Pour une requête GET, affichez la page avec la valeur par défaut
+    img_base64 = encode_maze(default_slider_value)
     return render_template('maze.html', img_data=img_base64)
-
-
-    # User reached route via GET (as by clicking a link or via redirect)
-    #else:
-        #return render_template("login.html")
 
 
