@@ -29,7 +29,13 @@ function sliderOrRadioChanged() {
     });
 
     console.log("Cols:", colValue, "Lines:", linesValue, "Selected Algo:", selectedAlgo);
-    
+
+    // Update hidden form fields
+    document.getElementById('hiddenColValue').value = colValue;
+    document.getElementById('hiddenLinesValue').value = linesValue;
+    document.getElementById('hiddenAlgo').value = selectedAlgo;
+
+
     var formData = new FormData();
     formData.append('colValue', colValue);
     formData.append('linesValue', linesValue);
@@ -55,26 +61,44 @@ function sliderOrRadioChanged() {
 
 {% block main %}
 
+<div class="container-fluid text-center">
+    <div class="row">
+        <div class="col">
+            <form method="POST" action="/save_maze">
+                <h1>Voici mon Image PNG Dynamique</h1>
+                <img id="mazeImage" src="data:image/png;base64,{{ img_data }}" alt="Mon Image Dynamique"><br />
+                <input type="hidden" name="maze_data" value="{{ img_data }}">
+                <input type="hidden" id="hiddenColValue" name="col_value" value="20">
+                <input type="hidden" id="hiddenLinesValue" name="lines_value" value="20">
+                <input type="hidden" id="hiddenAlgo" name="algo" value="ab">
+                <button class="btn btn-primary" id="save_maze" name="save_maze" type="submit">Save Maze</button>
+            </form>
+        </div>
+
+        
+      <div class="col-3 text-start lh-lg">
+        <label for="col">Columns:</label><br />
+        <input type="range" id="col" name="colValue" min="10" max="40" value="20"><br />
+        <label for="lines">Lines:</label><br />
+        <input type="range" id="lines" name="linesValue" min="10" max="40" value="20"><br />
+        <fieldset>
+            <legend>Algorithm:</legend><br />
+            <input type="radio" id="algo1" name="algo" value="ab" checked>
+            <label for="algo1">Aldous Border</label><br>
+            <input type="radio" id="algo2" name="algo" value="hk">
+            <label for="algo2">Hunt and Kill</label><br>
+            <input type="radio" id="algo3" name="algo" value="bt">
+            <label for="algo3">Binary Tree</label>
+        </fieldset>
+      </div>
+
+    </div>  
 
 
-<label for="col">Columns:</label>
-<input type="range" id="col" name="colValue" min="10" max="30" value="20">
 
-<label for="lines">Lines:</label>
-<input type="range" id="lines" name="linesValue" min="10" max="30" value="20">
 
-<fieldset>
-    <legend>Choose an algorithm:</legend>
-    <input type="radio" id="algo1" name="algo" value="ab" checked>
-    <label for="algo1">Algorithm 1</label><br>
-    <input type="radio" id="algo2" name="algo" value="hk">
-    <label for="algo2">Algorithm 2</label><br>
-    <input type="radio" id="algo3" name="algo" value="bt">
-    <label for="algo3">Algorithm 3</label>
-</fieldset>
 
-<h1>Voici mon Image PNG Dynamique</h1>
-<img id="mazeImage" src="data:image/png;base64,{{ img_data }}" alt="Mon Image Dynamique">
+
 
 {% endblock %}
 

@@ -208,4 +208,19 @@ def maze():
     img_base64 = encode_maze(col_value=default_slider_value, lines_value=default_slider_value, algo=default_algo)
     return render_template('maze.html', img_data=img_base64)
 
+@app.route("/save_maze", methods=["POST"])
+@login_required
+def save_maze():
+    # Get the base64 data from the form
+    maze_data = request.form.get("maze_data")
+    col_value = request.form.get("col_value")
+    lines_value = request.form.get("lines_value")
+    algo = request.form.get("algo")
+
+    # Save the maze data in the database
+    db.execute("INSERT INTO mazes (user_id, maze_data, columns, lines, algorithm) VALUES (?, ?, ?, ?, ?)", 
+    session["user_id"], maze_data, col_value, lines_value, algo)
+
+    flash("Maze saved successfully!")
+    return redirect("/maze")
 
