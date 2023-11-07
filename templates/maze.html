@@ -1,6 +1,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Gérer les sliders
+    // Sliders
     document.getElementById('col').onchange = function() {
         sliderOrRadioChanged();
     };
@@ -9,14 +9,14 @@ document.addEventListener('DOMContentLoaded', function() {
         sliderOrRadioChanged();
     };
 
-    // Gérer les boutons radio
+    // Radio buttons
     document.querySelectorAll('input[type=radio][name=algo]').forEach(function(radio) {
         radio.onchange = function() {
             sliderOrRadioChanged();
         };
     });
 });
-
+// function that update when changing slider or radio
 function sliderOrRadioChanged() {
     var colValue = document.getElementById('col').value;
     var linesValue = document.getElementById('lines').value;
@@ -30,17 +30,18 @@ function sliderOrRadioChanged() {
 
     console.log("Cols:", colValue, "Lines:", linesValue, "Selected Algo:", selectedAlgo);
 
-    // Update hidden form fields
+    // Update hidden form fields (for save in SQL)
     document.getElementById('hiddenColValue').value = colValue;
     document.getElementById('hiddenLinesValue').value = linesValue;
     document.getElementById('hiddenAlgo').value = selectedAlgo;
 
-
+    // Update form fields
     var formData = new FormData();
     formData.append('colValue', colValue);
     formData.append('linesValue', linesValue);
     formData.append('algo', selectedAlgo);
 
+    // POST request in AJAX
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/maze', true);
     xhr.onreadystatechange = function() {
@@ -65,7 +66,7 @@ function sliderOrRadioChanged() {
     <div class="row">
         <div class="col">
             <form method="POST" action="/save_maze">
-                <h1>Voici mon Image PNG Dynamique</h1>
+                <h1>Generated Maze:</h1>
                 <img id="mazeImage" src="data:image/png;base64,{{ img_data }}" alt="Mon Image Dynamique"><br />
                 <input type="hidden" name="maze_data" value="{{ img_data }}">
                 <input type="hidden" id="hiddenColValue" name="col_value" value="20">
@@ -78,9 +79,9 @@ function sliderOrRadioChanged() {
         
       <div class="col-3 text-start lh-lg">
         <label for="col">Columns:</label><br />
-        <input type="range" id="col" name="colValue" min="10" max="40" value="20"><br />
+        <input type="range" class="form-range" id="col" name="colValue" min="10" max="40" value="20"><br />
         <label for="lines">Lines:</label><br />
-        <input type="range" id="lines" name="linesValue" min="10" max="40" value="20"><br />
+        <input type="range" class="form-range" id="lines" name="linesValue" min="10" max="40" value="20"><br />
         <fieldset>
             <legend>Algorithm:</legend><br />
             <input type="radio" id="algo1" name="algo" value="ab" checked>
@@ -90,6 +91,7 @@ function sliderOrRadioChanged() {
             <input type="radio" id="algo3" name="algo" value="bt">
             <label for="algo3">Binary Tree</label>
         </fieldset>
+
       </div>
 
     </div>  
