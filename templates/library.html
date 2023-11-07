@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Library
+{% endblock %}
+
+{% block main %}
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th class="text-start"> </th>
+            <th class="text-center">Size</th>
+            <th class="text-center">Algorithm</th>
+            <th class="text-center">Creation date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in library %}
+        <tr>
+            <td class="text-center"> 
+                <form method="POST" action="/open_maze">
+                    <input type="hidden" name="maze_id" value="{{ item.id }}">
+                    <button type="submit" class="btn btn-info" id="btn{{ item.id }}">Open</button>
+                </form>
+            </td>
+            <td class="text-center">{{ item.columns }} x {{ item.lines }}</td>
+            <td class="text-center">{{ item.algorithm }}</td>
+            <td class="text-center">{{ item.creation_date }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

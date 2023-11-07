@@ -9,14 +9,11 @@ from flask import Flask, flash, redirect, render_template, request, session, sen
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
-
-from helpers import apology, login_required, lookup, usd
+from helpers import apology, login_required, names_algorithms
 
 # Configure application
 app = Flask(__name__)
 
-# Custom filter
-app.jinja_env.filters["usd"] = usd
 
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_PERMANENT"] = False
@@ -43,7 +40,7 @@ def after_request(response):
 @app.route("/")
 @login_required
 def index():
-    """To define"""
+    """index.html"""
 
     return render_template("index.html")
 
@@ -116,6 +113,7 @@ def login():
         session["user_id"] = rows[0]["id"]
 
         # Redirect user to home page
+        flash("Successfully connected")
         return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
@@ -124,6 +122,7 @@ def login():
 
 
 @app.route("/logout")
+@login_required
 def logout():
     """Log user out"""
 
@@ -131,6 +130,7 @@ def logout():
     session.clear()
 
     # Redirect user to login form
+    flash("Logout complete")
     return redirect("/")
 
 
@@ -168,6 +168,7 @@ def register():
         else:
             #insert username et hash(password) in the db
             db.execute("INSERT INTO users (username, hash) VALUES (?, ?);", username_to_register, generate_password_hash(password_to_register))
+            flash("New user created")
             return render_template("login.html")
 
     # User reached route via GET (as by clicking a link or via redirect or backward)
@@ -190,6 +191,7 @@ def encode_maze(col_value, lines_value, algo):
 
 
 @app.route("/maze", methods=["GET", "POST"])
+@login_required
 def maze():
     # default values for the first loading (i.e. GET)
     default_slider_value = 20
@@ -215,7 +217,7 @@ def save_maze():
     maze_data = request.form.get("maze_data")
     col_value = request.form.get("col_value")
     lines_value = request.form.get("lines_value")
-    algo = request.form.get("algo")
+    algo = names_algorithms[request.form.get("algo")]
 
     # Save the maze data in the database
     db.execute("INSERT INTO mazes (user_id, maze_data, columns, lines, algorithm) VALUES (?, ?, ?, ?, ?)", 
@@ -223,4 +225,31 @@ def save_maze():
 
     flash("Maze saved successfully!")
     return redirect("/maze")
+
+@app.route("/game", methods=["GET", "POST"])
+@login_required
+def game():
+    return render_template("game.html")
+
+@app.route("/library", methods=["GET", "POST"])
+@login_required
+def library():
+    ''' Print the history of saved mazes'''
+    library = db.execute("SELECT * FROM mazes WHERE user_id = ?", session["user_id"])
+    return render_template("library.html", library=library)
+
+@app.route("/open_maze", methods=["GET", "POST"])
+@login_required
+def open_maze():
+    ''' Open one saved mazes from library'''
+
+    if request.method == "POST":
+        maze_id = request.form.get("maze_id")
+        img_maze = db.execute("SELECT maze_data FROM mazes WHERE id = ?", maze_id)[0]["maze_data"]
+        data_maze = db.execute("SELECT creation_date, columns, lines, algorithm FROM mazes WHERE id = ?", maze_id)[0]
+    
+        return render_template('open_maze.html', img_data=img_maze, data_maze=data_maze)
+    
+    else:
+        return redirect("/library")
 

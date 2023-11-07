@@ -2,7 +2,7 @@ import random
 from time import gmtime, strftime, localtime
 from PIL import Image, ImageDraw
 
-'''Only the generation of maze in png work at that time'''
+'''Maze generator in PNG with various algorithm'''
 
 
 class Cell: #A maze is made up of cells
@@ -19,9 +19,6 @@ class Cell: #A maze is made up of cells
         self.neighbors = []
         self.content = " "
 
-    #def __repr__(self):
-        #return str(self.coord)
-
     def dig(self, cell): #Link two Cells
         self.links.append(cell.coord)
         cell.links.append(self.coord)
@@ -36,24 +33,6 @@ class Cell: #A maze is made up of cells
         if self.west_cell is not None:
             self.neighbors.append(self.west_cell)
      
-    def distances(self): #Not yet validated
-        distances = Distances(self)
-        frontier = [self]
-
-        while frontier:
-            new_frontier = []
-
-            for cell in frontier:
-                for linked in cell.links:
-                    if distances[linked]:
-                        continue
-                    distances[linked] = distances[cell] + 1
-                    new_frontier.append(linked)
-
-            frontier = new_frontier
-
-        return distances
-        
 
 class Grid:
     def __init__(self, col:int = 20, lines:int = 20, algo:str = "ab"):
@@ -99,36 +78,6 @@ class Grid:
     def create_png(self):
         return draw_PNG(self)
         
-class Distances: #not yet validated
-    def __init__(self, root:Cell):
-        self._root = root
-        self._cells = dict()
-        self._cells[root] = 0
-
-    def __getitem__(self, cell:Cell):
-        if cell in self._cells.keys():
-            return self._cells[cell]
-        return None
-
-    def __setitem__(self, cell:Cell, distance:int):
-        self._cells[cell] = distance
-
-    def cells(self):
-        return list(self._cells.keys())
-
-    def path_to(self, goal):
-        current = goal
-
-        breadcrumbs = Distances(self.root)
-        breadcrumbs[current] = self.cells[current]
-
-        while current != self.root:
-            for neighbor in current.links:
-                if self.cells[neighbor] < self.cells[current]:
-                    breadcrumbs[neighbor] = self.cells[neighbor]
-                    current = neighbor
-                    break
-        return breadcrumbs
     
 def draw_PNG(Grid, cell_size:int = 20, bg_color = (255,255,255), wall_color = (0,0,0), distance:bool = False):  
     """

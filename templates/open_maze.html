@@ -1,0 +1,15 @@
+
+{% extends "layout.html" %}
+
+{% block title %}
+    Maze
+{% endblock %}
+
+{% block main %}
+
+<div class="container-fluid text-center">
+    <p>A Maze of <b>{{ data_maze.columns }} columns</b> and <b>{{ data_maze.lines }} lines</b> make with the <b>{{ data_maze.algorithm }}</b> algorithm, generated the {{ data_maze.creation_date}}</p>
+    <img id="saved_maze" src="data:image/png;base64,{{ img_data }}" alt="Generated Maze"><br />
+</div>
+
+{% endblock %}
